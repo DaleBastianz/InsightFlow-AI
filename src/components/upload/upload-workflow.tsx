@@ -6,6 +6,7 @@ import { AlertCircle, CheckCircle2, UploadCloud, Sparkles, Link2, PencilLine, Tr
 import { TopicSearch } from "@/components/upload/topic-search";
 import { AgentPipelinePanel } from "@/components/results/agent-pipeline-panel";
 import { InputSamples } from "@/components/upload/input-samples";
+import { parseFileInBrowser } from "@/lib/client-file-parser";
 
 const MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024;
 const ACCEPTED_TYPES = {
@@ -64,25 +65,12 @@ export function UploadWorkflow() {
       }
 
       try {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        const response = await fetch("/api/parse-document", {
-          method: "POST",
-          body: formData,
-        });
-
-        const data = await response.json() as { text?: string; error?: string };
-
-        if (!response.ok || data.error) {
-          throw new Error(data.error ?? "Unable to parse file.");
-        }
-
+        const text = await parseFileInBrowser(file);
         newSources.push({
           id: fileId,
           type: "file",
           label: file.name,
-          content: data.text ?? "",
+          content: text,
           status: "success",
         });
       } catch (err) {
